@@ -1,0 +1,32 @@
+name: forge
+
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  ETH_RPC_URL: ${{ secrets.ETH_RPC_URL || 'https://eth.drpc.org' }}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Install Soldeer dependencies
+        run: forge soldeer install
+
+      - name: Forge fmt
+        run: forge fmt --check
+
+      - name: Forge build
+        run: forge build
+
+      - name: Forge test
+        run: forge test -vvv

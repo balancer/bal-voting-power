@@ -1,0 +1,15 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["dependencies"]
+remappings = ["forge-std/=dependencies/forge-std-1.15.0/src/"]
+solc_version = "0.8.34"
+evm_version = "osaka"
+optimizer = true
+optimizer_runs = 200
+
+[rpc_endpoints]
+mainnet = "${ETH_RPC_URL}"
+
+[dependencies]
+forge-std = "1.15.0"
