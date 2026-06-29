@@ -7,3 +7,7 @@ out/
 
 # Soldeer dependencies
 dependencies/
+
+# Forge deploy logs
+broadcast/**/dry-run/
+broadcast/**/run-latest.json
