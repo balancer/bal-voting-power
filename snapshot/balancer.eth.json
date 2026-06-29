@@ -2,19 +2,13 @@
   "name": "Balancer",
   "about": "",
   "network": "1",
-  "symbol": "veBAL",
+  "symbol": "BAL",
   "private": false,
   "admins": [],
   "moderators": [],
-  "members": [
-    "0x7019be4e4eb74ca5f61224feaf687d2b43998516",
-    "0x7c2ea10d3e5922ba3bbbafa39dc0677353d2af17",
-    "0xff0281256b2a478905b79895c1a2038a679e1751",
-    "0x58865c1B463Fd2772cD50EB50976A07FaE3Dc6F1"
-  ],
+  "members": ["0x58865c1B463Fd2772cD50EB50976A07FaE3Dc6F1"],
   "filters": {
-    "minScore": 200000,
-    "onlyMembers": false
+    "onlyMembers": true
   },
   "plugins": {
     "poap": {}
@@ -23,46 +17,100 @@
     "type": "weighted",
     "period": 345600,
     "hideAbstain": false,
-    "quorum": 2000000,
+    "quorum": 10000000,
     "privacy": ""
   },
   "strategies": [
     {
-      "name": "erc20-balance-of",
+      "name": "delegation",
       "network": "1",
       "params": {
-        "symbol": "veBAL",
-        "address": "0xC128a9954e6c874eA3d62ce62B468bA073093F25",
+        "symbol": "BAL",
+        "strategies": [
+          {
+            "name": "contract-call",
+            "params": {
+              "symbol": "BAL",
+              "address": "0x411e723E6652347FF3Dd31749913A834e3D43DB4",
+              "decimals": 18,
+              "methodABI": {
+                "name": "votingPower",
+                "type": "function",
+                "stateMutability": "view",
+                "inputs": [
+                  {
+                    "name": "user",
+                    "type": "address",
+                    "internalType": "address"
+                  }
+                ],
+                "outputs": [
+                  { "name": "", "type": "uint256", "internalType": "uint256" }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "erc20-balance-of-delegation",
+      "network": "100",
+      "params": {
+        "symbol": "BAL (gnosis)",
+        "address": "0x7eF541E2a22058048904fE5744f9c7E4C57AF717",
         "decimals": 18
       }
     },
     {
-      "name": "delegation-with-cap",
-      "network": "1",
+      "name": "erc20-balance-of-delegation",
+      "network": "42161",
       "params": {
-        "symbol": "veBAL (delegated)",
-        "address": "0xC128a9954e6c874eA3d62ce62B468bA073093F25",
-        "decimals": 18,
-        "strategies": [
-          {
-            "name": "erc20-balance-of",
-            "params": {
-              "symbol": "veBAL",
-              "address": "0xC128a9954e6c874eA3d62ce62B468bA073093F25",
-              "decimals": 18
-            }
-          }
-        ],
-        "capPercentage": 45,
-        "delegationSpace": "balancer.eth"
+        "symbol": "BAL (arbitrum)",
+        "address": "0x040d1EdC9569d4Bab2D15287Dc5A4F10F56a56B8",
+        "decimals": 18
+      }
+    },
+    {
+      "name": "erc20-balance-of-delegation",
+      "network": "8453",
+      "params": {
+        "symbol": "BAL (base)",
+        "address": "0x4158734D47Fc9692176B5085E0F52ee0Da5d47F1",
+        "decimals": 18
+      }
+    },
+    {
+      "name": "erc20-balance-of-delegation",
+      "network": "137",
+      "params": {
+        "symbol": "BAL (polygon)",
+        "address": "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3",
+        "decimals": 18
+      }
+    },
+    {
+      "name": "erc20-balance-of-delegation",
+      "network": "10",
+      "params": {
+        "symbol": "BAL (optimism)",
+        "address": "0xFE8B128bA8C78aabC59d4c64cEE7fF28e9379921",
+        "decimals": 18
+      }
+    },
+    {
+      "name": "erc20-balance-of-delegation",
+      "network": "43114",
+      "params": {
+        "symbol": "BAL (avalanche)",
+        "address": "0xE15bCB9E0EA69e6aB9FA080c4c4A5632896298C3",
+        "decimals": 18
       }
     }
   ],
   "validation": {
-    "name": "basic",
-    "params": {
-      "minScore": 200000
-    }
+    "name": "any",
+    "params": {}
   },
   "voteValidation": {
     "name": "any",
