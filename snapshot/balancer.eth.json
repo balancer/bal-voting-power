@@ -22,7 +22,7 @@
   },
   "strategies": [
     {
-      "name": "delegation",
+      "name": "with-delegation",
       "network": "1",
       "params": {
         "symbol": "BAL",
@@ -54,7 +54,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "100",
       "params": {
         "symbol": "BAL (gnosis)",
@@ -63,7 +63,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "42161",
       "params": {
         "symbol": "BAL (arbitrum)",
@@ -72,7 +72,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "8453",
       "params": {
         "symbol": "BAL (base)",
@@ -81,7 +81,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "137",
       "params": {
         "symbol": "BAL (polygon)",
@@ -90,7 +90,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "10",
       "params": {
         "symbol": "BAL (optimism)",
@@ -99,7 +99,7 @@
       }
     },
     {
-      "name": "erc20-balance-of-delegation",
+      "name": "erc20-balance-of-with-delegation",
       "network": "43114",
       "params": {
         "symbol": "BAL (avalanche)",
