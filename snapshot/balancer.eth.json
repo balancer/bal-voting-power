@@ -17,7 +17,7 @@
     "type": "weighted",
     "period": 345600,
     "hideAbstain": false,
-    "quorum": 10000000,
+    "quorum": 5000000,
     "privacy": ""
   },
   "strategies": [
@@ -31,7 +31,7 @@
             "name": "contract-call",
             "params": {
               "symbol": "BAL",
-              "address": "0x411e723E6652347FF3Dd31749913A834e3D43DB4",
+              "address": "TODO:BalVotingPower.sol::V2",
               "decimals": 18,
               "methodABI": {
                 "name": "votingPower",
