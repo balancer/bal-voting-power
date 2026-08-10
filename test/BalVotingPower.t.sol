@@ -73,7 +73,25 @@ contract BalVotingPowerTest is Test {
         assertEq(vp.votingPower(AURA_DELEGATE_SAFE), DEPLOYED_V1.votingPower(AURA_DELEGATE_SAFE));
     }
 
-    /// @dev Nobody else's score may change.
+    /// @dev Nobody else's score may change. Uses holders with a materially non-zero score, so the comparison
+    ///      cannot pass vacuously the way a random address does.
+    function test_matchesV1ForRealHolders() public view {
+        address[3] memory holders = [
+            0x9cC56Fa7734DA21aC88F6a816aF10C5b898596Ce, // TetuBAL locker, large veBAL lock
+            0x89f67f3054bFD662971854190Dbc18dcaBb416f6, // VeBalGrant, lock expired but still counted
+            AURA_DELEGATE_SAFE // holds nothing, so scores zero under both
+        ];
+
+        for (uint256 i; i < holders.length; ++i) {
+            uint256 expected = DEPLOYED_V1.votingPower(holders[i]);
+            assertEq(vp.votingPower(holders[i]), expected);
+            if (i < 2) assertGt(expected, 0);
+        }
+    }
+
+    /// @dev Guards against a future exclusion set matching more addresses than intended. Deliberately kept to
+    ///      a low run count: every run is a fresh address, so none of its storage reads hit the fork cache.
+    /// forge-config: default.fuzz.runs = 16
     function testFuzz_matchesV1ForNonExcluded(address user) public view {
         vm.assume(user != AURA_VOTER_PROXY);
         assertEq(vp.votingPower(user), DEPLOYED_V1.votingPower(user));
