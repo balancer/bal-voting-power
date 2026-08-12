@@ -76,16 +76,15 @@ contract BalVotingPowerTest is Test {
     /// @dev Nobody else's score may change. Uses holders with a materially non-zero score, so the comparison
     ///      cannot pass vacuously the way a random address does.
     function test_matchesV1ForRealHolders() public view {
-        address[3] memory holders = [
+        address[2] memory holders = [
             0x9cC56Fa7734DA21aC88F6a816aF10C5b898596Ce, // TetuBAL locker, large veBAL lock
-            0x89f67f3054bFD662971854190Dbc18dcaBb416f6, // VeBalGrant, lock expired but still counted
-            AURA_DELEGATE_SAFE // holds nothing, so scores zero under both
+            0x89f67f3054bFD662971854190Dbc18dcaBb416f6 // VeBalGrant, lock expired but still counted
         ];
 
         for (uint256 i; i < holders.length; ++i) {
             uint256 expected = DEPLOYED_V1.votingPower(holders[i]);
+            assertGt(expected, 0);
             assertEq(vp.votingPower(holders[i]), expected);
-            if (i < 2) assertGt(expected, 0);
         }
     }
 
