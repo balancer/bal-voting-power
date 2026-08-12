@@ -31,7 +31,7 @@
             "name": "contract-call",
             "params": {
               "symbol": "BAL",
-              "address": "TODO:BalVotingPower.sol::V2",
+              "address": "0x8103325109cF67ACb97aEeCa5b976677A4FF5E82",
               "decimals": 18,
               "methodABI": {
                 "name": "votingPower",
