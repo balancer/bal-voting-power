@@ -7,7 +7,7 @@ import {BalVotingPower, IERC20, IVotingEscrow} from "../src/BalVotingPower.sol";
 contract BalVotingPowerTest is Test {
     BalVotingPower vp;
 
-    /// @dev The live v1 deployment, used as the reference for "unchanged for everyone else".
+    // The live v1 deployment, used as the reference for "unchanged for everyone else".
     BalVotingPower constant DEPLOYED_V1 = BalVotingPower(0x411e723E6652347FF3Dd31749913A834e3D43DB4);
 
     address constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
