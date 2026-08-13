@@ -22,13 +22,12 @@ interface IVotingEscrow {
 }
 
 /// @title BAL voting power aggregator for the `balancer.eth` Snapshot space
-/// @title BAL voting power aggregator for the `balancer.eth` Snapshot space
 /// @notice Returns a voter's voting power denominated in BAL.
 /// @dev Sums raw BAL, the BAL underlying the 80/20 BAL/WETH BPT, and the BAL underlying any BPT locked in veBAL.
 ///      Addresses excluded by governance return zero. veBAL decay is ignored. Delegation is handled by the Snapshot
 ///      composite strategy wrapping this contract, not onchain.
 ///      IMPORTANT: Intended for offchain use only. This contract is meant for Snapshot score calculations via eth_call.
-/// @dev This is version 2, which adds the governance exclusion set (BIP-924).
+///      This is version 2, which adds the governance exclusion set (BIP-924).
 contract BalVotingPower {
     IERC20 public constant BAL = IERC20(0xba100000625a3754423978a60c9317c58a424e3D);
     IERC20 public constant BPT = IERC20(0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56);
