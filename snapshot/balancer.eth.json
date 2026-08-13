@@ -8,7 +8,8 @@
   "moderators": [],
   "members": ["0x58865c1B463Fd2772cD50EB50976A07FaE3Dc6F1"],
   "filters": {
-    "onlyMembers": true
+    "onlyMembers": true,
+    "minScore": 200000
   },
   "plugins": {
     "poap": {}
