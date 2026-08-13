@@ -17,13 +17,13 @@ contract BalVotingPowerTest is Test {
     // That comparison stops short of the compiler metadata appended after the code, because its hash comes out
     // different on CI than it does locally. test_sourceIsUnchangedSinceDeployment covers what it misses, by
     // hashing the source file directly.
-    BalVotingPower constant DEPLOYED_V2 = BalVotingPower(0x8103325109cF67ACb97aEeCa5b976677A4FF5E82);
-    uint256 constant V2_DEPLOY_BLOCK = 25_738_023;
+    BalVotingPower constant DEPLOYED_V2 = BalVotingPower(0x398aF7D0e1d98F580De6949cc4ADffCF5A4bD067);
+    uint256 constant V2_DEPLOY_BLOCK = 25_747_493;
 
     // keccak256 of src/BalVotingPower.sol exactly as it was compiled for DEPLOYED_V2, read out of that
     // contract's verified metadata under sources["src/BalVotingPower.sol"].keccak256. The compiler hashes the
     // source into the bytecode, so this is what makes an edit to that file a redeploy.
-    bytes32 constant DEPLOYED_SOURCE_HASH = 0x5ab3ab2cf147751c8b6b4b807fdf82724fdfeaa36863a309e048cb0a6dd3d2a6;
+    bytes32 constant DEPLOYED_SOURCE_HASH = 0xa2b40a4dd4a310703c6f68703982a80c49c332d4d6420684ea8ec339477086a3;
 
     address constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
     // Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
