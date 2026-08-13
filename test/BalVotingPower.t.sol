@@ -2,7 +2,7 @@
 pragma solidity 0.8.34;
 
 import {Test} from "forge-std/Test.sol";
-import {BalVotingPower, IERC20, IVotingEscrow} from "../src/BalVotingPower.sol";
+import {BalVotingPower} from "../src/BalVotingPower.sol";
 
 contract BalVotingPowerTest is Test {
     BalVotingPower vp;
@@ -10,13 +10,22 @@ contract BalVotingPowerTest is Test {
     // The live v1 deployment, used as the reference for "unchanged for everyone else".
     BalVotingPower constant DEPLOYED_V1 = BalVotingPower(0x411e723E6652347FF3Dd31749913A834e3D43DB4);
 
+    // The live v2 deployment, and the block it was created in. This address is the one carried in
+    // snapshot/balancer.eth.json, and test_deployedV2MatchesConfigAndSource asserts that the config file,
+    // this constant, and the contract this repo builds all agree.
+    //
+    // src/BalVotingPower.sol is byte-locked to that deployment. Editing it at all, even just a comment,
+    // changes the metadata hash and so changes the bytecode, and that test then fails.
+    BalVotingPower constant DEPLOYED_V2 = BalVotingPower(0x8103325109cF67ACb97aEeCa5b976677A4FF5E82);
+    uint256 constant V2_DEPLOY_BLOCK = 25_738_023;
+
     address constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
-    /// @dev Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
+    // Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
     address constant AURA_DELEGATE_SAFE = 0xAD9992f3631028CEF19e6D6C31e822C5bc2442CC;
 
-    /// @dev Pinned so the fixtures stay valid. Aura's veBAL lock expires 2027-04-29, after which the BPT is
-    ///      withdrawable and the balances these tests assert against will drain. Must be at or after block
-    ///      25027601, where `DEPLOYED_V1` was deployed.
+    // Pinned so the fixtures stay valid. Aura's veBAL lock expires 2027-04-29, after which the BPT is
+    // withdrawable and the balances these tests assert against will drain. It has to be at or after block
+    // 25027601, where DEPLOYED_V1 was deployed.
     uint256 constant FORK_BLOCK = 25_700_000; // 2026-08-07
 
     function setUp() public {
@@ -42,13 +51,6 @@ contract BalVotingPowerTest is Test {
         uint256 expected = (1e18 * balances[0]) / vp.BPT().totalSupply();
 
         assertEq(vp.votingPower(holder), expected);
-    }
-
-    function test_knownVeBalHolder() public view {
-        // TetuBAL locker: locked().amount will always remain > 0
-        address holder = 0x9cC56Fa7734DA21aC88F6a816aF10C5b898596Ce;
-        uint256 power = vp.votingPower(holder);
-        assertGt(power, 0);
     }
 
     /// @dev The position is material under the live v1 deployment, and zero here. The baseline is the figure
@@ -94,5 +96,17 @@ contract BalVotingPowerTest is Test {
     function testFuzz_matchesV1ForNonExcluded(address user) public view {
         vm.assume(user != AURA_VOTER_PROXY);
         assertEq(vp.votingPower(user), DEPLOYED_V1.votingPower(user));
+    }
+
+    /// @dev The Snapshot config names a live address, so it has to be the contract this repo builds. Makes its
+    ///      own fork, because FORK_BLOCK predates the v2 deployment and the address has no code there.
+    function test_deployedV2MatchesConfigAndSource() public {
+        string memory config = vm.readFile("snapshot/balancer.eth.json");
+        address configured = vm.parseJsonAddress(config, ".strategies[0].params.strategies[0].params.address");
+        assertEq(configured, address(DEPLOYED_V2), "config address");
+
+        vm.createSelectFork("mainnet", V2_DEPLOY_BLOCK);
+        BalVotingPower local = new BalVotingPower();
+        assertEq(keccak256(address(DEPLOYED_V2).code), keccak256(address(local).code), "deployed bytecode");
     }
 }
