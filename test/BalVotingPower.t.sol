@@ -12,12 +12,18 @@ contract BalVotingPowerTest is Test {
 
     // The live v2 deployment, and the block it was created in. This address is the one carried in
     // snapshot/balancer.eth.json, and test_deployedV2MatchesConfigAndSource asserts that the config file,
-    // this constant, and the contract this repo builds all agree.
+    // this constant, and the executable code this repo builds all agree.
     //
-    // src/BalVotingPower.sol is byte-locked to that deployment. Editing it at all, even just a comment,
-    // changes the metadata hash and so changes the bytecode, and that test then fails.
+    // That comparison stops short of the compiler metadata appended after the code, because its hash comes out
+    // different on CI than it does locally. test_sourceIsUnchangedSinceDeployment covers what it misses, by
+    // hashing the source file directly.
     BalVotingPower constant DEPLOYED_V2 = BalVotingPower(0x8103325109cF67ACb97aEeCa5b976677A4FF5E82);
     uint256 constant V2_DEPLOY_BLOCK = 25_738_023;
+
+    // keccak256 of src/BalVotingPower.sol exactly as it was compiled for DEPLOYED_V2, read out of that
+    // contract's verified metadata under sources["src/BalVotingPower.sol"].keccak256. The compiler hashes the
+    // source into the bytecode, so this is what makes an edit to that file a redeploy.
+    bytes32 constant DEPLOYED_SOURCE_HASH = 0x5ab3ab2cf147751c8b6b4b807fdf82724fdfeaa36863a309e048cb0a6dd3d2a6;
 
     address constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
     // Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
@@ -107,6 +113,28 @@ contract BalVotingPowerTest is Test {
 
         vm.createSelectFork("mainnet", V2_DEPLOY_BLOCK);
         BalVotingPower local = new BalVotingPower();
-        assertEq(keccak256(address(DEPLOYED_V2).code), keccak256(address(local).code), "deployed bytecode");
+        bytes32 deployed = keccak256(_executableCode(address(DEPLOYED_V2)));
+        assertEq(deployed, keccak256(_executableCode(address(local))), "executable code");
+    }
+
+    /// @dev Editing src/BalVotingPower.sol at all, a comment included, changes the deployed bytecode, because
+    ///      the compiler hashes the source text into it. Hashing the file needs no compiler, so unlike a
+    ///      bytecode comparison this gives the same answer on every machine.
+    function test_sourceIsUnchangedSinceDeployment() public view {
+        assertEq(keccak256(bytes(vm.readFile("src/BalVotingPower.sol"))), DEPLOYED_SOURCE_HASH, "source text");
+    }
+
+    /// @dev Returns the runtime code with its trailing CBOR metadata removed. That metadata holds a hash of the
+    ///      source text and of the compiler settings, and it comes out different on CI than it does locally even
+    ///      when the executable code is identical, so comparing whole runtime code is not portable.
+    function _executableCode(address target) internal view returns (bytes memory) {
+        bytes memory code = target.code;
+        uint256 cborLength = (uint256(uint8(code[code.length - 2])) << 8) | uint256(uint8(code[code.length - 1]));
+
+        bytes memory body = new bytes(code.length - cborLength - 2);
+        for (uint256 i; i < body.length; ++i) {
+            body[i] = code[i];
+        }
+        return body;
     }
 }
