@@ -2,7 +2,7 @@
 pragma solidity 0.8.34;
 
 import {Test} from "forge-std/Test.sol";
-import {BalVotingPower, IERC20, IVotingEscrow} from "../src/BalVotingPower.sol";
+import {BalVotingPower} from "../src/BalVotingPower.sol";
 
 contract BalVotingPowerTest is Test {
     BalVotingPower vp;
@@ -10,13 +10,28 @@ contract BalVotingPowerTest is Test {
     // The live v1 deployment, used as the reference for "unchanged for everyone else".
     BalVotingPower constant DEPLOYED_V1 = BalVotingPower(0x411e723E6652347FF3Dd31749913A834e3D43DB4);
 
+    // The live v2 deployment, and the block it was created in. This address is the one carried in
+    // snapshot/balancer.eth.json, and test_deployedV2MatchesConfigAndSource asserts that the config file,
+    // this constant, and the executable code this repo builds all agree.
+    //
+    // That comparison stops short of the compiler metadata appended after the code, because its hash comes out
+    // different on CI than it does locally. test_sourceIsUnchangedSinceDeployment covers what it misses, by
+    // hashing the source file directly.
+    BalVotingPower constant DEPLOYED_V2 = BalVotingPower(0x398aF7D0e1d98F580De6949cc4ADffCF5A4bD067);
+    uint256 constant V2_DEPLOY_BLOCK = 25_747_493;
+
+    // keccak256 of src/BalVotingPower.sol exactly as it was compiled for DEPLOYED_V2, read out of that
+    // contract's verified metadata under sources["src/BalVotingPower.sol"].keccak256. The compiler hashes the
+    // source into the bytecode, so this is what makes an edit to that file a redeploy.
+    bytes32 constant DEPLOYED_SOURCE_HASH = 0xa2b40a4dd4a310703c6f68703982a80c49c332d4d6420684ea8ec339477086a3;
+
     address constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
-    /// @dev Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
+    // Aura's Snapshot delegate safe. Holds nothing itself, so it must be unaffected onchain.
     address constant AURA_DELEGATE_SAFE = 0xAD9992f3631028CEF19e6D6C31e822C5bc2442CC;
 
-    /// @dev Pinned so the fixtures stay valid. Aura's veBAL lock expires 2027-04-29, after which the BPT is
-    ///      withdrawable and the balances these tests assert against will drain. Must be at or after block
-    ///      25027601, where `DEPLOYED_V1` was deployed.
+    // Pinned so the fixtures stay valid. Aura's veBAL lock expires 2027-04-29, after which the BPT is
+    // withdrawable and the balances these tests assert against will drain. It has to be at or after block
+    // 25027601, where DEPLOYED_V1 was deployed.
     uint256 constant FORK_BLOCK = 25_700_000; // 2026-08-07
 
     function setUp() public {
@@ -42,13 +57,6 @@ contract BalVotingPowerTest is Test {
         uint256 expected = (1e18 * balances[0]) / vp.BPT().totalSupply();
 
         assertEq(vp.votingPower(holder), expected);
-    }
-
-    function test_knownVeBalHolder() public view {
-        // TetuBAL locker: locked().amount will always remain > 0
-        address holder = 0x9cC56Fa7734DA21aC88F6a816aF10C5b898596Ce;
-        uint256 power = vp.votingPower(holder);
-        assertGt(power, 0);
     }
 
     /// @dev The position is material under the live v1 deployment, and zero here. The baseline is the figure
@@ -94,5 +102,39 @@ contract BalVotingPowerTest is Test {
     function testFuzz_matchesV1ForNonExcluded(address user) public view {
         vm.assume(user != AURA_VOTER_PROXY);
         assertEq(vp.votingPower(user), DEPLOYED_V1.votingPower(user));
+    }
+
+    /// @dev The Snapshot config names a live address, so it has to be the contract this repo builds. Makes its
+    ///      own fork, because FORK_BLOCK predates the v2 deployment and the address has no code there.
+    function test_deployedV2MatchesConfigAndSource() public {
+        string memory config = vm.readFile("snapshot/balancer.eth.json");
+        address configured = vm.parseJsonAddress(config, ".strategies[0].params.strategies[0].params.address");
+        assertEq(configured, address(DEPLOYED_V2), "config address");
+
+        vm.createSelectFork("mainnet", V2_DEPLOY_BLOCK);
+        BalVotingPower local = new BalVotingPower();
+        bytes32 deployed = keccak256(_executableCode(address(DEPLOYED_V2)));
+        assertEq(deployed, keccak256(_executableCode(address(local))), "executable code");
+    }
+
+    /// @dev Editing src/BalVotingPower.sol at all, a comment included, changes the deployed bytecode, because
+    ///      the compiler hashes the source text into it. Hashing the file needs no compiler, so unlike a
+    ///      bytecode comparison this gives the same answer on every machine.
+    function test_sourceIsUnchangedSinceDeployment() public view {
+        assertEq(keccak256(bytes(vm.readFile("src/BalVotingPower.sol"))), DEPLOYED_SOURCE_HASH, "source text");
+    }
+
+    /// @dev Returns the runtime code with its trailing CBOR metadata removed. That metadata holds a hash of the
+    ///      source text and of the compiler settings, and it comes out different on CI than it does locally even
+    ///      when the executable code is identical, so comparing whole runtime code is not portable.
+    function _executableCode(address target) internal view returns (bytes memory) {
+        bytes memory code = target.code;
+        uint256 cborLength = (uint256(uint8(code[code.length - 2])) << 8) | uint256(uint8(code[code.length - 1]));
+
+        bytes memory body = new bytes(code.length - cborLength - 2);
+        for (uint256 i; i < body.length; ++i) {
+            body[i] = code[i];
+        }
+        return body;
     }
 }

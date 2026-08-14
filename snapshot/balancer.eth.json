@@ -31,7 +31,7 @@
             "name": "contract-call",
             "params": {
               "symbol": "BAL",
-              "address": "0x8103325109cF67ACb97aEeCa5b976677A4FF5E82",
+              "address": "0x398aF7D0e1d98F580De6949cc4ADffCF5A4bD067",
               "decimals": 18,
               "methodABI": {
                 "name": "votingPower",
