@@ -22,9 +22,12 @@ interface IVotingEscrow {
 }
 
 /// @title BAL voting power aggregator for the `balancer.eth` Snapshot space
-/// @notice Returns a voter's voting power denominated in BAL, summing raw BAL, the BAL underlying the 80/20 BAL/WETH BPT, and the BAL underlying any BPT locked in veBAL.
-/// @dev veBAL decay is ignored. Delegation is handled by the Snapshot composite strategy wrapping this contract, not onchain.
+/// @notice Returns a voter's voting power denominated in BAL.
+/// @dev Sums raw BAL, the BAL underlying the 80/20 BAL/WETH BPT, and the BAL underlying any BPT locked in veBAL.
+///      Addresses excluded by governance return zero. veBAL decay is ignored. Delegation is handled by the Snapshot
+///      composite strategy wrapping this contract, not onchain.
 ///      IMPORTANT: Intended for offchain use only. This contract is meant for Snapshot score calculations via eth_call.
+///      This is version 2, which adds the governance exclusion set (BIP-924).
 contract BalVotingPower {
     IERC20 public constant BAL = IERC20(0xba100000625a3754423978a60c9317c58a424e3D);
     IERC20 public constant BPT = IERC20(0x5c6Ee304399DBdB9C8Ef030aB642B10820DB8F56);
@@ -33,9 +36,21 @@ contract BalVotingPower {
 
     bytes32 public constant POOL_ID = 0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014;
 
+    /// @notice Aura Finance `VoterProxy`, holder of Aura's entire veBAL position. Excluded by BIP-924
+    address public constant AURA_VOTER_PROXY = 0xaF52695E1bB01A16D33D7194C28C42b10e0Dbec2;
+
     uint256 private constant BAL_IDX = 0;
 
+    /// @notice Whether an address has been excluded from voting power by governance.
+    /// @dev Note that the composite strategy scores every address independently and sums delegators' scores
+    ///      into their delegate, so excluding a holder also removes the power it forwards.
+    function isExcluded(address user) public pure returns (bool) {
+        return user == AURA_VOTER_PROXY;
+    }
+
     function votingPower(address user) external view returns (uint256) {
+        if (isExcluded(user)) return 0;
+
         uint256 raw = BAL.balanceOf(user);
 
         int128 lockedAmt = VE_BAL.locked(user).amount;
