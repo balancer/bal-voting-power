@@ -10,7 +10,9 @@ on:
   workflow_dispatch:
 
 env:
-  ETH_RPC_URL: ${{ secrets.ETH_RPC_URL || 'https://eth.drpc.org' }}
+  # No public fallback. The tests fork at a pinned block, so every read is an archive request, and the free
+  # endpoints refuse those. An unset secret should fail plainly rather than as a stream of RPC errors.
+  ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
 
 jobs:
   build-and-test:
