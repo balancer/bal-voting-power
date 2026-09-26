@@ -22,10 +22,34 @@
   },
   "strategies": [
     {
-      "name": "with-delegation",
+      "name": "contract-call",
       "network": "1",
       "params": {
         "symbol": "BAL",
+        "address": "0x398aF7D0e1d98F580De6949cc4ADffCF5A4bD067",
+        "decimals": 18,
+        "methodABI": {
+          "name": "votingPower",
+          "type": "function",
+          "stateMutability": "view",
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "internalType": "address"
+            }
+          ],
+          "outputs": [
+            { "name": "", "type": "uint256", "internalType": "uint256" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "delegation",
+      "network": "1",
+      "params": {
+        "symbol": "BAL (delegated)",
         "strategies": [
           {
             "name": "contract-call",
