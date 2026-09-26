@@ -104,12 +104,17 @@ contract BalVotingPowerTest is Test {
         assertEq(vp.votingPower(user), DEPLOYED_V1.votingPower(user));
     }
 
-    /// @dev The Snapshot config names a live address, so it has to be the contract this repo builds. Makes its
-    ///      own fork, because FORK_BLOCK predates the v2 deployment and the address has no code there.
+    /// @dev The Snapshot config names a live address, so it has to be the contract this repo builds. The address
+    ///      appears twice in the config: directly on the own-balance `contract-call` strategy, and nested inside
+    ///      the `delegation` strategy's sub-strategy. Makes its own fork, because FORK_BLOCK predates the v2
+    ///      deployment and the address has no code there.
     function test_deployedV2MatchesConfigAndSource() public {
         string memory config = vm.readFile("snapshot/balancer.eth.json");
-        address configured = vm.parseJsonAddress(config, ".strategies[0].params.strategies[0].params.address");
-        assertEq(configured, address(DEPLOYED_V2), "config address");
+        address configured = vm.parseJsonAddress(config, ".strategies[0].params.address");
+        assertEq(configured, address(DEPLOYED_V2), "config address (own-balance strategy)");
+        address configuredDelegated =
+            vm.parseJsonAddress(config, ".strategies[1].params.strategies[0].params.address");
+        assertEq(configuredDelegated, address(DEPLOYED_V2), "config address (delegation strategy)");
 
         vm.createSelectFork("mainnet", V2_DEPLOY_BLOCK);
         BalVotingPower local = new BalVotingPower();
